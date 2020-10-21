@@ -94,15 +94,34 @@ def login():
         abort(500)
 
 
-# JSON Api_user
+# JSON api_user
 
-def user(user_id, name, email, password, phone):
+def user(user_id, name, email, password, phone, authorized, forbiddens):
     return {'user_id': user_id,
             'name': name,
             'email': email,
             'password': password,
             'phone': phone,
+            'authorized': authorized,
+            'forbiddens': forbiddens
             }
+
+
+# JSON trip
+
+def trip(trip_id, driver, passengers, departure_date, arrival_date, origin, destination, cost, is_full):
+    return {
+        'trip_id': trip_id,
+        'driver': driver,
+        'passengers': passengers,
+        'departure_date': departure_date,
+        'arrival_date': arrival_date,
+        'origin': origin,
+        'destination': destination,
+        'cost': cost,
+        'is_full': is_full
+
+    }
 
 
 # Fonction de hashage pour les passwords
@@ -245,10 +264,11 @@ def api_user():
 
             try:
 
-                users = query_db('select * from api_user order by user_id')
+                users = query_db('select * from user order by user_id')
 
                 for i in range(len(users)):
-                    users[i] = user(users[i][0], users[i][1], users[i][2], users[i][3], users[i][4])
+                    users[i] = user(users[i][0], users[i][1], users[i][2], users[i][3], users[i][4], users[i][5],
+                                    users[i][6])
 
                 return jsonify(users)
 
@@ -288,12 +308,12 @@ def api_user():
 
                 # Creation of the user
 
-                insert_user = query_db('insert into api_user(name,email,password,phone) VALUES(?,?,?,?)',
+                insert_user = query_db('insert into user(name,email,password,phone) VALUES(?,?,?,?)',
                                        [name, email, password, phone], change=True)
 
                 user_id = query_db('select last_insert_rowid()', one=True)[0]
 
-                return user(user_id, name, email, password, phone), status.HTTP_201_CREATED
+                return user(user_id, name, email, password, phone, None, None), status.HTTP_201_CREATED
 
 
             except():
@@ -311,7 +331,7 @@ def api_user_id(user_id):
 
         try:
 
-            infos = query_db('select * from api_user where user_id=?', [user_id], one=True)
+            infos = query_db('select * from user where user_id=?', [user_id], one=True)
 
             if request.method == "GET":
 
@@ -319,13 +339,11 @@ def api_user_id(user_id):
 
                     if not infos:
 
-                        abort(404, 'Api_user not found with the given user_id')
+                        abort(404, 'User not found with the given user_id')
 
                     else:
 
-                        for i in range(len(infos)):
-
-                            profil = user(infos[0], infos[1], infos[2], infos[3], infos[4])
+                        profil = user(infos[0], infos[1], infos[2], infos[3], infos[4], infos[5], infos[6])
 
                         return jsonify(profil), status.HTTP_200_OK
 
@@ -376,12 +394,19 @@ def api_user_id(user_id):
 
                         pass
 
-                        # Update of the user
+                    # Preferences
 
-                    update_user = query_db('update api_user set name=?,email=?,password=?,phone=? where user_id=?',
-                                           [name, email, password, phone, user_id], change=True)
+                    authorized = request.data.get('authorized', None)
 
-                    return user(user_id, name, email, password, phone), status.HTTP_200_OK
+                    forbiddens = request.data.get('forbiddens', None)
+
+                    # Update of the user
+
+                    update_user = query_db(
+                        'update user set name=?,email=?,password=?,phone=?,authorized=?,forbiddens=? where user_id=?',
+                        [name, email, password, phone, authorized, forbiddens, user_id], change=True)
+
+                    return user(user_id, name, email, password, phone, authorized, forbiddens), status.HTTP_200_OK
 
 
                 except():
@@ -394,7 +419,7 @@ def api_user_id(user_id):
 
                     # Get the list of user_ids
 
-                    liste = query_db('select user_id from api_user')
+                    liste = query_db('select user_id from user')
 
                     temp = []
 
@@ -403,13 +428,202 @@ def api_user_id(user_id):
 
                     if user_id in temp:
 
-                        delete_user = query_db('delete from api_user where user_id=?', [user_id], change=True)
+                        delete_user = query_db('delete from user where user_id=?', [user_id], change=True)
 
                         return {}, status.HTTP_204_NO_CONTENT
 
                     else:
 
-                        abort(404, 'Api_user has already been deleted or does not exist')
+                        abort(404, 'User has already been deleted or does not exist')
+
+
+                except():
+
+                    abort(500)
+
+        except():
+
+            abort(500)
+
+    else:
+
+        abort(401)
+
+
+@api.route('/trip/', methods=['GET', 'PUT'])
+def api_trip():
+    if True:
+
+        if request.method == 'GET':
+
+            try:
+
+                trips = query_db('select * from trip order by trip_id')
+
+                for i in range(len(trips)):
+                    trips[i] = trip(trips[i][0], trips[i][1], trips[i][2], trips[i][3], trips[i][4], trips[i][5],
+                                    trips[i][6], trips[i][7], trips[i][8])
+
+                return jsonify(trips)
+
+            except():
+
+                abort(500)
+
+        else:  # request.method == 'PUT'
+
+            try:
+
+                # Driver
+
+                driver = request.data.get('driver', None)
+
+                # Passengers
+
+                passengers = request.data.get('passengers', None)
+
+                # Departure date
+
+                departure_date = request.data.get('departure_date', None)
+
+                # Arrival date
+
+                arrival_date = request.data.get('arrival_date', None)
+
+                # Origin
+
+                origin = request.data.get('origin', None)
+
+                # Destination
+
+                destination = request.data.get('destination', None)
+
+                # Cost
+
+                cost = request.data.get('cost', None)
+
+                # Creation of the trip
+
+                insert_trip = query_db(
+                    'insert into trip(driver,passengers,departure_date,arrival_date,origin,destination,cost) VALUES(?,?,?,?,?,?,?)',
+                    [driver, passengers, departure_date, arrival_date, origin, destination, cost], change=True)
+
+                trip_id = query_db('select last_insert_rowid()', one=True)[0]
+
+                return trip(trip_id, driver, passengers, departure_date, arrival_date, origin, destination, cost, False
+                            ), status.HTTP_201_CREATED
+
+            except():
+
+                abort(500)
+
+    else:
+
+        abort(401)
+
+
+@api.route('/trip/<int:trip_id>/', methods=['GET', 'PATCH', 'DELETE'])
+def trip_trip_id(trip_id):
+    if True:
+
+        try:
+
+            infos = query_db('select * from trip where trip_id=?', [trip_id], one=True)
+
+            if request.method == "GET":
+
+                try:
+
+                    if not infos:
+
+                        abort(404, 'Trip not found with the given trip_id')
+
+                    else:
+
+                        profil = trip(infos[0], infos[1], infos[2], infos[3], infos[4], infos[5], infos[6],
+                                      infos[7], infos[8])
+
+                        return jsonify(profil), status.HTTP_200_OK
+
+                except():
+
+                    abort(500)
+
+
+            elif request.method == "PATCH":
+
+                try:
+
+                    # Driver
+
+                    driver = request.data.get('driver', None)
+
+                    # Passengers
+
+                    passengers = request.data.get('passengers', None)
+
+                    # Departure date
+
+                    departure_date = request.data.get('departure_date', None)
+
+                    # Arrival date
+
+                    arrival_date = request.data.get('arrival_date', None)
+
+                    # Origin
+
+                    origin = request.data.get('origin', None)
+
+                    # Destination
+
+                    destination = request.data.get('destination', None)
+
+                    # Cost
+
+                    cost = request.data.get('cost', None)
+
+                    # Full
+
+                    is_full = request.data.get('is_full', None)
+
+
+                    # Update of the trip
+
+                    update_trip = query_db(
+                        'update trip set driver=?,passengers=?,departure_date=?,arrival_date=?,origin=?,destination=?,cost=?,is_full=? where user_id=?',
+                        [driver, passengers, departure_date, arrival_date, origin, destination, cost, is_full,
+                         is_full,trip_id], change=True)
+
+                    return trip(trip_id, driver, passengers, departure_date, arrival_date, origin, destination, cost,
+                                is_full), status.HTTP_200_OK
+
+
+                except():
+
+                    abort(500)
+
+            else:  # request.method ='DELETE'
+
+                try:
+
+                    # Get the list of trip_ids
+
+                    liste = query_db('select trip_id from trip')
+
+                    temp = []
+
+                    for element in liste:
+                        temp += element
+
+                    if trip_id in temp:
+
+                        delete_user = query_db('delete from trip where trip_id=?', [trip_id], change=True)
+
+                        return {}, status.HTTP_204_NO_CONTENT
+
+                    else:
+
+                        abort(404, 'Trip has already been deleted or does not exist')
 
 
                 except():
@@ -455,6 +669,31 @@ def method_not_allowed(e):
 @api.errorhandler(500)  # Internal Error Server
 def internal_error_server(e):
     return jsonify(error=str(e)), 500
+
+
+token_validity = 60  # minutes
+
+
+# Token OAuth 2.0
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+
+        token = request.headers['Authorization']
+
+        if not token:
+            abort(401, 'Token is missing !')
+
+        try:
+            data = jwt.decode(token, api.config['SECRET_KEY'])
+
+        except:
+
+            abort(401, 'Token is invalid !')
+
+        return f(*args, **kwargs)
+
+    return decorated
 
 
 # Fonctions de repérage des espaces
@@ -511,32 +750,6 @@ def query_db(query, args=(), one=False, change=False):
         rv = cur.fetchall()
     cur.close()
     return (rv[0] if rv else None) if one else rv
-
-
-token_validity = 60  # minutes
-
-
-# Token OAuth 2.0
-
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-
-        token = request.headers['Authorization']
-
-        if not token:
-            abort(401, 'Token is missing !')
-
-        try:
-            data = jwt.decode(token, api.config['SECRET_KEY'])
-
-        except:
-
-            abort(401, 'Token is invalid !')
-
-        return f(*args, **kwargs)
-
-    return decorated
 
 
 # Running de l'api
