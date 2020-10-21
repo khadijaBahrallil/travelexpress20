@@ -500,7 +500,7 @@ def close_connection(exception):
         db.close()
 
 
-# Requête SQL
+# Requête SQLite
 
 def query_db(query, args=(), one=False, change=False):
     cur = get_db().execute(query, args)
