@@ -1,13 +1,16 @@
 import hashlib
 import sqlite3
-from flask import jsonify, g, request, abort, render_template, redirect
+from datetime import timedelta
+from functools import wraps
+
+from flask import jsonify, g, request, abort, render_template, redirect, session, url_for, flash
 from flask_api import FlaskAPI, status
 from flask_cors import CORS
 import phonenumbers
 from validate_email import validate_email
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, DateField
-from wtforms.validators import DataRequired, Email
+from wtforms.validators import DataRequired
 import win32api
 
 # Settings
@@ -24,6 +27,8 @@ CORS(api)
 # Configuration de l'api
 
 api.config['SECRET_KEY'] = 'ec3f0831f0978bdc130ebba668551da9afb8740938af64999364262d4ce06d71'
+
+api.permanent_session_lifetime = timedelta(minutes=0.5)  # La session dure 2 heures
 
 
 # JSON user
@@ -54,6 +59,7 @@ def trip(trip_id, driver, passengers, departure_date, arrival_date, origin, dest
         'is_full': is_full
 
     }
+
 
 # Fonction de hashage pour les passwords
 
@@ -149,14 +155,32 @@ def conditions_password(password):
         pass
 
 
+# Décorateur d'authentification
+
+def logged_in(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            if not session['username'] and not session['_id']:
+
+                return redirect(url_for('login'))
+            else:
+                return f(*args, **kwargs)
+        except KeyError:
+            return redirect(url_for('login'))
+
+    return decorated_function
+
+
 # Routings d'accueil
 
 @api.route("/")
 def welcome():
-    return index()
+    return redirect(url_for('login'))
 
 
 @api.route("/index.html")
+@logged_in
 def index():
     return render_template("index.html")
 
@@ -164,7 +188,7 @@ def index():
 # Routing d'authentification
 
 @api.route('/login.html', methods=['GET', 'POST'])
-def login_form():
+def login():
     form = LoginForm()
 
     if form.validate_on_submit():
@@ -198,7 +222,15 @@ def login_form():
 
                 else:
 
-                    pass  # Connexion effectuée avec succès
+                    # Connexion effectuée avec succès
+
+                    id = query_db('select user_id from user where username=?',
+                                  [username], one=True)[0]
+
+                    session['_id'] = id
+
+                    session['username'] = username
+
 
             else:
 
@@ -209,10 +241,7 @@ def login_form():
             abort(500)
 
         else:
-            return redirect('/index.html')
-
-    else:
-        pass
+            return redirect(url_for('index'))
 
     return render_template('login.html', title='Log In', form=form)
 
@@ -224,7 +253,10 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Sign In')
 
 
+# Routing de création de trip
+
 @api.route("/trip_create.html", methods=['GET', 'POST'])
+@logged_in
 def trip_create():
     form = TripForm()
 
@@ -247,8 +279,6 @@ def trip_create():
                 'insert into trip(departure_date,arrival_date,origin,destination,cost,is_full) VALUES(?,?,?,?,?,?)',
                 [departure_date, arrival_date, origin, destination, int(cost), is_full], change=True)
 
-            trip_id = query_db('select last_insert_rowid()', one=True)[0]
-
         except():
 
             abort(500)
@@ -268,7 +298,10 @@ class TripForm(FlaskForm):
     submit = SubmitField('Add Trip')
 
 
+# Routing de recherche de trip
+
 @api.route("/trip_search.html", methods=['GET', 'POST'])
+@logged_in
 def trip_search():
     form = TripSearchForm()
 
@@ -290,7 +323,7 @@ def trip_search():
             abort(500)
 
         else:
-            return render_template("trip_search_result.html",title='Trip Search Result',trips=trips)
+            return render_template("trip_search_result.html", title='Trip Search Result', trips=trips)
 
     return render_template("trip_search.html", title='Search Trip', form=form)
 
@@ -302,7 +335,10 @@ class TripSearchForm(FlaskForm):
     submit = SubmitField('Search Trip')
 
 
+# Routing de recherche d'user
+
 @api.route("/user_search.html", methods=['GET', 'POST'])
+@logged_in
 def user_search():
     form = UserSearchForm()
 
@@ -312,7 +348,7 @@ def user_search():
         username = result['username']
 
         try:
-            users = api_user()
+            users = api_users()
             search = []
             for u in users:
                 if u['username'] == username:
@@ -322,7 +358,8 @@ def user_search():
             abort(500)
 
         else:
-            return render_template("user_search_result.html",title="User Search Result",users=users)
+            return render_template("user_search_result.html", title="User Search Result", users=users)
+
     return render_template("user_search.html", title='Search User', form=form)
 
 
@@ -330,6 +367,8 @@ class UserSearchForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     submit = SubmitField('Search User')
 
+
+# Routing d'inscription
 
 @api.route("/signup.html", methods=['GET', 'POST'])
 def signup_page():
@@ -369,14 +408,13 @@ def signup_page():
                 'insert into user(username,email,password,phone,authorized,forbiddens) VALUES(?,?,?,?,?,?)',
                 [username, email, password, phone, authorized, forbiddens], change=True)
 
-            user_id = query_db('select last_insert_rowid()', one=True)[0]
-
         except():
 
             abort(500)
 
         else:
             win32api.MessageBox(0, 'User créé avec succès', 'TravelExpress', 0x00001000)
+            return redirect(url_for('login'))
 
     return render_template("signup.html", title='Sign Up', form=form)
 
@@ -391,9 +429,19 @@ class SignupForm(FlaskForm):
     submit = SubmitField('Sign Up')
 
 
+# Déconnexion
+
+@api.route('/logout')
+@logged_in
+def logout():
+    session.pop('_id', None)
+    session.pop('username', None)
+    return redirect(url_for('index'))
+
+
 # Liste des users
 
-def api_user():
+def api_users():
     users = query_db('select * from user order by user_id')
 
     for i in range(len(users)):
@@ -403,124 +451,69 @@ def api_user():
     return users
 
 
-@api.route('/user/<int:user_id>/', methods=['GET', 'PATCH', 'DELETE'])
-def api_user_id(user_id):
-    try:
+# Profil de l'user connecté
 
-        infos = query_db('select * from user where user_id=?', [user_id], one=True)
+def profil():
 
-        if request.method == "GET":
-
-
-            try:
-
-                if not infos:
-
-                    abort(404, 'User not found with the given user_id')
-
-                else:
-
-                    profil = user(infos[0], infos[1], infos[2], infos[3], infos[4], infos[5], infos[6])
-
-                    return jsonify(profil), status.HTTP_200_OK
-
-            except():
-
-                abort(500)
+    username = session['username']
+    infos = query_db('select * from user where username=?', [username], one=True)
+    return user(infos[0], infos[1], infos[2], infos[3], infos[4], infos[5], infos[6])
 
 
-        elif request.method == "PATCH":
 
-            try:
+# Profil de l'user
 
-                # Name
+@api.route('/user_profile.html', methods=['GET', 'PATCH'])
+@logged_in
+def user_profile():
 
-                name = request.data.get('name', None)
+    profile = profil()
+    form = SignupForm()
 
-                conditions_username(name)
+    if form.validate_on_submit():
 
-                # Email
+        id = session['_id']
 
-                email = request.data.get('email', None)
+        result = request.form
 
-                if infos[2] != email:
+        username = result['username']
 
-                    conditions_email(email)
+        conditions_username(username)
 
-                else:
+        email = result['email']
 
-                    pass
+        conditions_email(email)
 
-                # Phone
+        phone = result['phone']
 
-                phone = request.data.get('phone', None)
+        conditions_phone(phone)
 
-                conditions_phone(phone)
+        password = result['password']
 
-                # Password
+        conditions_password(password)
 
-                password = request.data.get('password', None)
+        password = encrypt_string(password)
 
-                if infos[3] != password:
+        authorized = result['authorized']
 
-                    conditions_password(password)
+        forbiddens = result['forbiddens']
 
-                    password = encrypt_string(password)
+        try:
 
-                else:
+            # Mise à jour du profil
 
-                    pass
+            update_user = query_db(
+                'update user set username=?,email=?,password=?,phone=?,authorized=?,forbiddens=? where user_id=?',
+                [username, email, password, phone, authorized, forbiddens, id], change=True)
 
-                # Preferences
+        except():
 
-                authorized = request.data.get('authorized', None)
+            abort(500)
 
-                forbiddens = request.data.get('forbiddens', None)
+        else:
+            win32api.MessageBox(0, 'Profil mis à jour avec succès', 'TravelExpress', 0x00001000)
 
-                # Update of the user
-
-                update_user = query_db(
-                    'update user set name=?,email=?,password=?,phone=?,authorized=?,forbiddens=? where user_id=?',
-                    [name, email, password, phone, authorized, forbiddens, user_id], change=True)
-
-                return user(user_id, name, email, password, phone, authorized, forbiddens), status.HTTP_200_OK
-
-
-            except():
-
-                abort(500)
-
-        else:  # request.method ='DELETE'
-
-            try:
-
-                # Get the list of user_ids
-
-                liste = query_db('select user_id from user')
-
-                temp = []
-
-                for element in liste:
-                    temp += element
-
-                if user_id in temp:
-
-                    delete_user = query_db('delete from user where user_id=?', [user_id], change=True)
-
-                    return {}, status.HTTP_204_NO_CONTENT
-
-                else:
-
-                    abort(404, 'User has already been deleted or does not exist')
-
-
-            except():
-
-                abort(500)
-
-    except():
-
-        abort(500)
+    return render_template("user_profile.html", title='User Profile', form=form, profile=profile)
 
 
 # Liste des trips
@@ -650,13 +643,14 @@ def checkout():
     form = CheckoutForm()
     return render_template("checkout.html", title='Checkout', form=form)
 
-class CheckoutForm(FlaskForm):
 
+class CheckoutForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     cardNumber = IntegerField('Card Number', validators=[DataRequired()])
     expireDate = StringField('Expire Date', validators=[DataRequired()])
     cryptogram = IntegerField('Cryptogram', validators=[DataRequired()])
     submit = SubmitField('Confirm Transaction')
+
 
 # Template Error
 

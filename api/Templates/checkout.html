@@ -2,14 +2,14 @@
 
 {% block content %}
 
-    <H1>Checkout</H1>
+    <h1>Checkout</h1>
     <form action="" method="post">
         {{ form.hidden_tag() }}
         <p>
             {{ form.username.label }}<br>
             {{ form.username(size=32) }}
         </p>
-        <H2>Card Information</H2>
+        <h2>Card Information</h2>
         <p>
             {{ form.cardNumber.label }}<br>
             {{ form.cardNumber(size=32) }}
@@ -22,8 +22,6 @@
             {{ form.cryptogram.label }}<br>
             {{ form.cryptogram(size=32) }}
         </p>
-
-
 
         <p>{{ form.submit() }}</p>
     </form>
