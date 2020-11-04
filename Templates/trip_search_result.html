@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>Trip Search Result </h1>
+
+    {% for trip in trips %}
+       
+        <span class="badge badge-primary">{{ trip['origin'] }}</span>
+         <span class="badge badge-primary">{{ trip['destination'] }}</span>
+          <span class="badge badge-primary">{{ trip['departure_date'] }}</span>
+          <span class="badge badge-primary">{{ trip['arrival_date'] }}</span>
+          <span class="badge badge-primary">{{ trip['cost'] }}</span>
+          <span class="badge badge-primary">{{ trip['driver'] }}</span>
+          <span class="badge badge-primary">{{ trip['passengers'] }}</span>
+         
+        <hr>
+    {% endfor %}
+
+{% endblock %}
+
