@@ -8,22 +8,21 @@ from validate_email import validate_email
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, DateField
 from wtforms.validators import DataRequired, Email
-import win32api
 
 # Settings
 
-# set FLASK_APP=api.py
+# set FLASK_APP=app.py
 # set FLASK_ENV=development
 # set FLASK_DEBUG=1
 
 # Initialisation de l'api
 
-api = FlaskAPI(__name__)
-CORS(api)
+app = FlaskAPI(__name__)
+CORS(app)
 
 # Configuration de l'api
 
-api.config['SECRET_KEY'] = 'ec3f0831f0978bdc130ebba668551da9afb8740938af64999364262d4ce06d71'
+app.config['SECRET_KEY'] = 'ec3f0831f0978bdc130ebba668551da9afb8740938af64999364262d4ce06d71'
 
 
 # JSON user
@@ -151,19 +150,19 @@ def conditions_password(password):
 
 # Routings d'accueil
 
-@api.route("/")
+@app.route("/")
 def welcome():
     return index()
 
 
-@api.route("/index.html")
+@app.route("/index.html")
 def index():
     return render_template("index.html")
 
 
 # Routing d'authentification
 
-@api.route('/login.html', methods=['GET', 'POST'])
+@app.route('/login.html', methods=['GET', 'POST'])
 def login_form():
     form = LoginForm()
 
@@ -224,7 +223,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Sign In')
 
 
-@api.route("/trip_create.html", methods=['GET', 'POST'])
+@app.route("/trip_create.html", methods=['GET', 'POST'])
 def trip_create():
     form = TripForm()
 
@@ -268,7 +267,7 @@ class TripForm(FlaskForm):
     submit = SubmitField('Add Trip')
 
 
-@api.route("/trip_search.html", methods=['GET', 'POST'])
+@app.route("/trip_search.html", methods=['GET', 'POST'])
 def trip_search():
     form = TripSearchForm()
 
@@ -302,7 +301,7 @@ class TripSearchForm(FlaskForm):
     submit = SubmitField('Search Trip')
 
 
-@api.route("/user_search.html", methods=['GET', 'POST'])
+@app.route("/user_search.html", methods=['GET', 'POST'])
 def user_search():
     form = UserSearchForm()
 
@@ -331,7 +330,7 @@ class UserSearchForm(FlaskForm):
     submit = SubmitField('Search User')
 
 
-@api.route("/signup.html", methods=['GET', 'POST'])
+@app.route("/signup.html", methods=['GET', 'POST'])
 def signup_page():
     form = SignupForm()
 
@@ -403,7 +402,7 @@ def api_user():
     return users
 
 
-@api.route('/user/<int:user_id>/', methods=['GET', 'PATCH', 'DELETE'])
+@app.route('/user/<int:user_id>/', methods=['GET', 'PATCH', 'DELETE'])
 def api_user_id(user_id):
     try:
 
@@ -535,7 +534,7 @@ def api_trip():
     return trips
 
 
-@api.route('/trip/<int:trip_id>/', methods=['GET', 'PATCH', 'DELETE'])
+@app.route('/trip/<int:trip_id>/', methods=['GET', 'PATCH', 'DELETE'])
 def trip_trip_id(trip_id):
     try:
 
@@ -645,7 +644,7 @@ def trip_trip_id(trip_id):
         abort(500)
 
 
-@api.route("/checkout.html")
+@app.route("/checkout.html")
 def checkout():
     form = CheckoutForm()
     return render_template("checkout.html", title='Checkout', form=form)
@@ -667,32 +666,32 @@ def error(e):
 
 # Routings d'erreurs
 
-@api.errorhandler(400)  # Bad Request
+@app.errorhandler(400)  # Bad Request
 def bad_request(e):
     return error(e), 400
 
 
-@api.errorhandler(401)  # Unauthorized
+@app.errorhandler(401)  # Unauthorized
 def unauthorized(e):
     return error(e), 401
 
 
-@api.errorhandler(403)  # Forbidden
+@app.errorhandler(403)  # Forbidden
 def forbidden(e):
     return error(e), 403
 
 
-@api.errorhandler(404)  # Resource not found
+@app.errorhandler(404)  # Resource not found
 def resource_not_found(e):
     return error(e), 404
 
 
-@api.errorhandler(405)  # Method not allowed
+@app.errorhandler(405)  # Method not allowed
 def method_not_allowed(e):
     return error(e), 405
 
 
-@api.errorhandler(500)  # Internal Error Server
+@app.errorhandler(500)  # Internal Error Server
 def internal_error_server(e):
     return error(e), 500
 
@@ -733,7 +732,7 @@ def get_db():
 
 # Fermeture de la connexion
 
-@api.teardown_appcontext
+@app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
@@ -756,4 +755,4 @@ def query_db(query, args=(), one=False, change=False):
 # Running de l'api
 
 if __name__ == '__main__':
-    api.run(debug=True)
+    app.run(debug=True)
