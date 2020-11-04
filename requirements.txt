@@ -14,9 +14,6 @@ json5==0.8.5
 jsonschema==3.0.2
 jwt==1.0.0
 libarchive-c==2.8
-navigator-updater==0.2.1
-path.py==12.0.1
-pathlib2==2.3.5
 phonenumbers==8.12.11
 requests==2.22.0
 tables==3.5.2
