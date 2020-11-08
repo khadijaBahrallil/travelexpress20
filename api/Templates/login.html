@@ -2,7 +2,10 @@
 
 {% block content %}
 
-    <h1>Log In</h1>
+    <h1>{{title}}</h1>
+
+    <br>
+
     <form action="" method="post">
         {{ form.hidden_tag() }}
         <p>
@@ -13,8 +16,11 @@
             {{ form.password.label }}<br>
             {{ form.password(size=32) }}
         </p>
+
+        <br>
        
         <p>{{ form.submit() }}</p>
+        
     </form>
     
 {% endblock %}

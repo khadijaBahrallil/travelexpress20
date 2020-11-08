@@ -2,7 +2,9 @@
 
 {% block content %}
 
-    <h1>Search a user</h1>
+    <h1>{{title}}</h1>
+
+    <br>
 
     <form action="" method="post" >
         {{ form.hidden_tag() }}
@@ -11,10 +13,11 @@
             {{ form.username(size=32) }}
         </p>
 
+        <br>
 
         <p>{{ form.submit() }}</p>
-    </form>
 
+    </form>
 
 
 {% endblock %}

@@ -2,20 +2,68 @@
 
 {% block content %}
 
-    <h1>Trip Search Result </h1>
+    <h1>{{title}}</h1>
+
+    <br>
 
     {% for trip in trips %}
+
+
+        <div class="card">
+     
+        <div class="card-body">
+
+        
+
+        <table>
+
+        <thead>
+
+        
+            <th colspan="1">Origin</th>
+            <th colspan="1">Destination</th>
+            <th colspan="1">Departure Date</th>
+            <th colspan="1">Arrival Date</th>
+            <th colspan="1">Cost ($CAN)</th>
+            <th colspan="1">Driver</th>
+            <th colspan="1">Available Places</th>
+            <th colspan="1">Total Places </th>
+            <th colspan="1">Passengers</th>
+            
+
        
-        <span class="badge badge-primary">{{ trip['origin'] }}</span>
-         <span class="badge badge-primary">{{ trip['destination'] }}</span>
-          <span class="badge badge-primary">{{ trip['departure_date'] }}</span>
-          <span class="badge badge-primary">{{ trip['arrival_date'] }}</span>
-          <span class="badge badge-primary">{{ trip['cost'] }}</span>
-          <span class="badge badge-primary">{{ trip['driver'] }}</span>
-          <span class="badge badge-primary">{{ trip['passengers'] }}</span>
-         
-        <hr>
+        </thead>
+
+        <tbody>
+    
+         <td><span class="badge badge-primary"style="width:150px; height:25px">{{ trip['origin'] }}</span></td>
+         <td><span class="badge badge-primary"style="width:150px; height:25px">{{ trip['destination'] }}</span></td>    
+         <td><span class="badge badge-primary"style="width:150px; height:25px">{{ trip['departure_date'] }}</span></td>
+         <td><span class="badge badge-primary"style="width:150px; height:25px">{{ trip['arrival_date'] }}</span></td>
+         <td><span class="badge badge-primary"style="width:150px; height:25px">{{ trip['cost'] }}</span></td>
+         <td><span class="badge badge-primary"style="width:150px; height:25px">{{ trip['driver'] }}</span></td>
+         <td><span class="badge badge-primary"style="width:150px; height:25px">{{ trip['places_count'] }}</span></td>    
+         <td><span class="badge badge-primary"style="width:150px; height:25px">{{ trip['places_total'] }}</span></td>
+         <td>{% for passenger in trip['passengers'] %}
+            <span class="badge badge-primary"style="width:200px; height:25px">{{passenger}}</span>
+            {% endfor %}
+        </td>
+         <br>
+    
+        </tbody>
+        </table>
+
+        <br>
+
+         <a href="checkout.html/{{trip['trip_id']}}"><button>Book</button></a>
+
+        </div>
+        </div>
+
+
+       
     {% endfor %}
 
+   
 {% endblock %}
 

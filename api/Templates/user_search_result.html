@@ -2,18 +2,24 @@
 
 {% block content %}
 
-    <h1>User Search Result </h1>
-	{% for user in users %}
-        <a href="#">
-            <h2>{{ user['username'] }}</h2>
-        </a>
-        <span class="badge badge-primary">{{ user['phone'] }}</span>
-         <span class="badge badge-primary">{{ user['authorized'] }}</span>
-          <span class="badge badge-primary">{{ user['forbiddens'] }}</span>
-         
-        <hr>
-    {% endfor %}
+    <h1>{{ title }}</h1>
 
+    <br>
+
+	 <div class="card">
+     
+        <div class="card-body">
+        	
+          
+        <h2>{{ user['username'] }}</h2>
+       
+        <p class="text-muted">{{ user['phone'] }}</p>
+        <p class="text-muted">{{ user['authorized'] }}</p>
+        <p class="text-muted">{{ user['forbiddens'] }}</p>
+
+        </div>
+
+    </div>
 
 
 {% endblock %}

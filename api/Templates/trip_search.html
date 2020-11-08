@@ -2,10 +2,13 @@
 
 {% block content %}
 
-    <h1>Search for a trip </h1>
+    <h1>{{title}}</h1>
+
+    <br>
 
     <form action="" method="post">
         {{ form.hidden_tag() }}
+
         <p>
             {{ form.origin.label }}<br>
             {{ form.origin(size=32) }}
@@ -17,11 +20,18 @@
 
         <p>
             {{ form.departure_date.label }}<br>
-            {{ form.departure_date(size=32) }}
+            {{ form.departure_date(type='date') }}
         </p>
 
+         <p>
+            {{ form.places_count.label }}<br>
+            {{ form.places_count(type='number') }}
+        </p>
+
+        <br>
 
         <p>{{ form.submit() }}</p>
+
     </form>
 
 

@@ -2,7 +2,9 @@
 
 {% block content %}
 
-    <h1>Create a trip</h1>
+    <h1>{{title}}</h1>
+
+    <br>
 
     <form action="" method="post">
         {{ form.hidden_tag() }}
@@ -14,22 +16,27 @@
             {{ form.destination.label }}<br>
             {{ form.destination(size=32) }}
         </p>
-      <p>
-            {{ form.cost.label }}<br>
-            {{ form.cost(size=32) }}
-        </p>
+       
         <p>
             {{ form.departure_date.label }}<br>
-            {{ form.departure_date(size=32) }}
+            {{ form.departure_date(type='datetime-local') }}
+           
         </p>
          <p>
-            {{ form.arrival_date.label }}<br>
-            {{ form.arrival_date(size=32) }}
+             {{ form.arrival_date.label}}<br>
+            {{ form.arrival_date(type='datetime-local') }}
         </p>
 
-        <p>{{ form.submit() }}</p>
-    </form>
+         <p>
+            {{ form.places_total.label }}<br>
+            {{ form.places_total(type='number') }}
+        </p>
 
+        <br>
+
+        <p>{{ form.submit() }}</p>
+
+    </form>
 
 
 {% endblock %}

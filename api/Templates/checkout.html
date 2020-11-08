@@ -2,28 +2,50 @@
 
 {% block content %}
 
-    <h1>Checkout</h1>
+    <h1>{{title}}</h1>
+
+    <br> 
+
+    <span class="badge badge-primary"style="width:280px; height:25px">{{ trip['origin']}}->{{ trip['destination']}}</span>
+    <br>
+    <span class="badge badge-primary"style="width:280px; height:25px">{{ trip['departure_date']}}->{{ trip['arrival_date']}}</span>
+    <br>
+    <span class="badge badge-primary"style="width:280px; height:25px">1 personne</span> 
+    <br>
+    <span class="badge badge-primary"style="width:280px; height:25px">{{ trip['cost']}}$CAN</span> 
+    <br>
+    <span class="badge badge-primary"style="width:280px; height:25px">Driver: {{ trip['driver']}}</span> 
+    <br>
+
+    <br>
+
     <form action="" method="post">
+
         {{ form.hidden_tag() }}
-        <p>
-            {{ form.username.label }}<br>
+
+         <p>
+            {{ form.username.label}} (Ex: DUPONT MARTIN)<br>
             {{ form.username(size=32) }}
         </p>
-        <h2>Card Information</h2>
+
+
         <p>
-            {{ form.cardNumber.label }}<br>
+            {{ form.cardNumber.label}} (**** **** **** ****)<br>
             {{ form.cardNumber(size=32) }}
         </p>
         <p>
-            {{ form.expireDate.label }}<br>
+            {{ form.expireDate.label }} (**/**) <br>
             {{ form.expireDate(size=32) }}
         </p>
         <p>
-            {{ form.cryptogram.label }}<br>
+            {{ form.cryptogram.label }} (*** or ****)<br>
             {{ form.cryptogram(size=32) }}
         </p>
 
+        <br>
+
         <p>{{ form.submit() }}</p>
+
     </form>
 
 

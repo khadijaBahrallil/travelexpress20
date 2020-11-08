@@ -2,8 +2,10 @@
 
 {% block content %}
 
-    <h1>Sign Up</h1>
-    
+    <h1>{{title}}</h1>
+
+    <br>
+
     <form action="" method="post">
         {{ form.hidden_tag() }}
         <p>
@@ -14,7 +16,7 @@
             {{ form.email.label }}<br>
             {{ form.email(size=32) }}
         </p>
-      <p>
+        <p>
             {{ form.phone.label }}<br>
             {{ form.phone(size=32) }}
         </p>
@@ -26,11 +28,15 @@
             {{ form.authorized.label }}<br>
             {{ form.authorized(size=32) }}
         </p>
-     <p>
+        <p>
             {{ form.forbiddens.label }}<br>
             {{ form.forbiddens(size=32) }}
         </p>
+
+        <br>
+
         <p>{{ form.submit() }}</p>
+        
     </form>
 
 
