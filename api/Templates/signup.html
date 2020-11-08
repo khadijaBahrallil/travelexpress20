@@ -6,6 +6,16 @@
 
     <br>
 
+    {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
     <form action="" method="post">
         {{ form.hidden_tag() }}
         <p>
@@ -17,7 +27,7 @@
             {{ form.email(size=32) }}
         </p>
         <p>
-            {{ form.phone.label }}<br>
+            {{ form.phone.label }} (Ex: +337845128)<br>
             {{ form.phone(size=32) }}
         </p>
         <p>
@@ -36,7 +46,7 @@
         <br>
 
         <p>{{ form.submit() }}</p>
-        
+
     </form>
 
 

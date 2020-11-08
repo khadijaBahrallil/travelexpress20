@@ -3,7 +3,7 @@ import sqlite3
 from datetime import timedelta, datetime
 from functools import wraps
 import re
-from flask import g, request, abort, render_template, redirect, session, url_for
+from flask import g, request, abort, render_template, redirect, session, url_for, flash
 from flask_api import FlaskAPI
 from flask_cors import CORS
 import phonenumbers
@@ -29,7 +29,7 @@ CORS(api)
 
 api.config['SECRET_KEY'] = 'ec3f0831f0978bdc130ebba668551da9afb8740938af64999364262d4ce06d71'
 
-api.permanent_session_lifetime = timedelta(minutes=5)  # La session dure 2
+api.permanent_session_lifetime = timedelta(minutes=120)  # La session dure 2 heures
 
 
 # JSON user
@@ -548,8 +548,8 @@ def signup_page():
             abort(500)
 
         else:
-            win32api.MessageBox(0, 'User créé avec succès', 'TravelExpress', 0x00001000)
-            return redirect(url_for('login'))
+            flash('User créé avec succès')
+            flash('Cliquez sur Log In')
 
     return render_template("signup.html", title='Sign Up', form=form)
 
@@ -596,56 +596,11 @@ def profil():
 
 # Profil de l'user
 
-@api.route('/user_profile.html', methods=['GET', 'PATCH'])
+@api.route('/user_profile.html')
 @logged_in
 def user_profile():
     profile = profil()
-    form = SignupForm()
-
-    if form.validate_on_submit():
-
-        id = session['_id']
-
-        result = request.form
-
-        username = result['username']
-
-        conditions_username(username)
-
-        email = result['email']
-
-        conditions_email(email)
-
-        phone = result['phone']
-
-        conditions_phone(phone)
-
-        password = result['password']
-
-        conditions_password(password)
-
-        password = encrypt_string(password)
-
-        authorized = result['authorized']
-
-        forbiddens = result['forbiddens']
-
-        try:
-
-            # Mise à jour du profil
-
-            update_user = query_db(
-                'update user set username=?,email=?,password=?,phone=?,authorized=?,forbiddens=? where user_id=?',
-                [username, email, password, phone, authorized, forbiddens, id], change=True)
-
-        except():
-
-            abort(500)
-
-        else:
-            win32api.MessageBox(0, 'Profil mis à jour avec succès', 'TravelExpress', 0x00001000)
-
-    return render_template("user_profile.html", title='User Profile', form=form, profile=profile)
+    return render_template("user_profile.html", title='User Profile', profile=profile)
 
 
 # Liste des trips
@@ -654,7 +609,7 @@ def api_trip():
     trips = query_db('select * from trip order by trip_id')
 
     for i in range(len(trips)):
-        trips[i] = trip(trips[i][0], trips[i][1], trips[i][2].split(None), trips[i][3], trips[i][4], trips[i][5],
+        trips[i] = trip(trips[i][0], trips[i][1], trips[i][2].split('|'), trips[i][3], trips[i][4], trips[i][5],
                         trips[i][6], trips[i][7], trips[i][8], trips[i][9])
 
     return trips
@@ -681,7 +636,7 @@ def my_trips():
 
 # Paiement
 
-@api.route("/checkout.html/<int:trip_id>", methods=['GET', 'POST'])
+@api.route("/checkout.html%<int:trip_id>", methods=['GET', 'POST'])
 @logged_in
 def checkout(trip_id):
     infos = query_db('select * from trip where trip_id=?', [trip_id], one=True)
@@ -701,6 +656,14 @@ def checkout(trip_id):
 
         abort(500)
 
+    else:
+
+        if book_trip['places_count']<=0:
+            abort(404)
+
+        else:
+            pass
+
     form = CheckoutForm()
 
     if form.validate_on_submit():
@@ -713,7 +676,8 @@ def checkout(trip_id):
         condition_expireDate(expireDate)
         cryptogram = result['cryptogram']
         condition_cryptogram(cryptogram)
-        passenger = " "+session['username']
+        passenger = "|"+session['username']
+
 
 
         try:
@@ -727,8 +691,7 @@ def checkout(trip_id):
             abort(500)
 
         else:
-            win32api.MessageBox(0, 'Paiement effectué avec succès', 'TravelExpress', 0x00001000)
-            return redirect(url_for('mytrips'))
+            return redirect(url_for('my_trips'))
 
     return render_template("checkout.html", title='Check Out', form=form, trip=book_trip)
 
