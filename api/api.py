@@ -407,8 +407,8 @@ def trip_create():
             abort(500)
 
         else:
-            win32api.MessageBox(0, 'Création du trip effectuée avec succès', 'TravelExpress', 0x00001000)
-            return redirect(url_for('my_trips'))
+            flash('Trip créé avec succès')
+            flash('Cliquez sur My Trips')
 
     return render_template("trip_create.html", title='Create a trip', form=form)
 
