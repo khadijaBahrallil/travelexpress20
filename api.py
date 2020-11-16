@@ -12,7 +12,6 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, DateField
 from wtforms.fields.html5 import DateTimeLocalField
 from wtforms.validators import DataRequired
-import win32api
 
 # Settings
 
