@@ -1,2 +1,3 @@
 # TravelExpress
-School assignement for Distributed system Course
+School assignement for Distributed system Course.
+
